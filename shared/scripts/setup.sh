@@ -44,7 +44,7 @@ case $CLOUD_ENV in
     ;;
 
   *)
-    exit "CLOUD_ENV not set to one of aws, gce, or azure - exiting."
+    echo "CLOUD_ENV not set to one of aws, gce, or azure - exiting." >&2 && exit 1
     ;;
 esac
 
