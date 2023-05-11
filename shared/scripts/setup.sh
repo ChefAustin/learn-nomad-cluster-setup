@@ -1,30 +1,32 @@
 #!/bin/bash
 
-set -e
+# `set` args explained (respectively):
+# Fail on non-zero exit codes, fail on unset variables, print executed commands to terminal, don't mask errors in pipes
+set -eu -o pipefail
 
-# Disable interactive apt prompts
+# Disable interactive apt prompts to avoid debconf failures (and subsequent fallbacks to Readline/Teletype frontends):
 export DEBIAN_FRONTEND=noninteractive
 
 cd /ops
 
 CONFIGDIR=/ops/shared/config
 
-CONSULVERSION=1.11.4
+CONSULVERSION=1.15.2
 CONSULDOWNLOAD=https://releases.hashicorp.com/consul/${CONSULVERSION}/consul_${CONSULVERSION}_linux_amd64.zip
 CONSULCONFIGDIR=/etc/consul.d
 CONSULDIR=/opt/consul
 
-VAULTVERSION=1.5.3
+VAULTVERSION=1.13.2
 VAULTDOWNLOAD=https://releases.hashicorp.com/vault/${VAULTVERSION}/vault_${VAULTVERSION}_linux_amd64.zip
 VAULTCONFIGDIR=/etc/vault.d
 VAULTDIR=/opt/vault
 
-NOMADVERSION=1.3.3
+NOMADVERSION=1.5.5
 NOMADDOWNLOAD=https://releases.hashicorp.com/nomad/${NOMADVERSION}/nomad_${NOMADVERSION}_linux_amd64.zip
 NOMADCONFIGDIR=/etc/nomad.d
 NOMADDIR=/opt/nomad
 
-CONSULTEMPLATEVERSION=0.25.1
+CONSULTEMPLATEVERSION=0.31.0
 CONSULTEMPLATEDOWNLOAD=https://releases.hashicorp.com/consul-template/${CONSULTEMPLATEVERSION}/consul-template_${CONSULTEMPLATEVERSION}_linux_amd64.zip
 CONSULTEMPLATECONFIGDIR=/etc/consul-template.d
 CONSULTEMPLATEDIR=/opt/consul-template
@@ -54,12 +56,11 @@ sudo apt-get clean
 
 
 # Disable the firewall
-
 sudo ufw disable || echo "ufw not installed"
 
 # Consul
-
-curl -L $CONSULDOWNLOAD > consul.zip
+## See `man curl` for details on the following flags
+curl --fail --silent --show-error --location $CONSULDOWNLOAD > consul.zip
 
 ## Install
 sudo unzip consul.zip -d /usr/local/bin
@@ -73,8 +74,8 @@ sudo mkdir -p $CONSULDIR
 sudo chmod 755 $CONSULDIR
 
 # Vault
-
-curl -L $VAULTDOWNLOAD > vault.zip
+## See `man curl` for details on the following flags
+curl --fail --silent --show-error --location $VAULTDOWNLOAD > vault.zip
 
 ## Install
 sudo unzip vault.zip -d /usr/local/bin
@@ -88,8 +89,8 @@ sudo mkdir -p $VAULTDIR
 sudo chmod 755 $VAULTDIR
 
 # Nomad
-
-curl -L $NOMADDOWNLOAD > nomad.zip
+## See `man curl` for details on the following flags
+curl --fail --silent --show-error --location $NOMADDOWNLOAD > nomad.zip
 
 ## Install
 sudo unzip nomad.zip -d /usr/local/bin
@@ -103,8 +104,8 @@ sudo mkdir -p $NOMADDIR
 sudo chmod 755 $NOMADDIR
 
 # Consul Template 
-
-curl -L $CONSULTEMPLATEDOWNLOAD > consul-template.zip
+## See `man curl` for details on the following flags
+curl --fail --silent --show-error --location $CONSULTEMPLATEDOWNLOAD > consul-template.zip
 
 ## Install
 sudo unzip consul-template.zip -d /usr/local/bin
@@ -119,14 +120,28 @@ sudo chmod 755 $CONSULTEMPLATEDIR
 
 
 # Docker
-distro=$(lsb_release -si | tr '[:upper:]' '[:lower:]')
+## Some of the following Docker-related install steps are from https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+# Remove old versions of Docker (if any) and redirect STDERR to /dev/null to avoid error messages if no old versions exist
+sudo apt-get remove docker docker-engine docker.io containerd runc 2> /dev/null || echo "No old versions of Docker to remove"
+
+# Install dependent packages to allow apt to use a repository over HTTPS
 sudo apt-get install -y apt-transport-https ca-certificates gnupg2 
-curl -fsSL https://download.docker.com/linux/debian/gpg | sudo apt-key add -
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/${distro} $(lsb_release -cs) stable"
+
+# Add Docker’s official GPG key
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+sudo chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Set up the repository in apt sources list
+echo "deb [arch="$(dpkg --print-architecture)" signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  "$(. /etc/os-release && echo "$VERSION_CODENAME")" stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update the apt package index then install the latest version of Docker Engine, containerd, and Docker Compose
 sudo apt-get update
-sudo apt-get install -y docker-ce
+sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Java
+## TODO: Probably need to evaluate this block and make sure it's the right version/is still needed
 sudo add-apt-repository -y ppa:openjdk-r/ppa
 sudo apt-get update 
 sudo apt-get install -y openjdk-8-jdk
