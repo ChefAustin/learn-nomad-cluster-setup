@@ -28,7 +28,6 @@ data "amazon-ami" "hashistack" {
   region      = var.region
 }
 
-
 source "amazon-ebs" "hashistack" {
   ami_name      = "hashistack-${local.timestamp}"
   instance_type = "t3.medium"
@@ -42,7 +41,7 @@ source "amazon-ebs" "hashistack" {
     Name        = "nomad-alb"
     source = "hashicorp/learn"
     purpose = "demo"
-    OS_Version = "Ubuntu"
+    OS_Version = "Ubuntu 22.04.2 LTS"
     Release = "Latest"
     Base_AMI_ID = "{{ .SourceAMI }}"
     Base_AMI_Name = "{{ .SourceAMIName }}"
