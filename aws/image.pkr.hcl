@@ -1,3 +1,12 @@
+packer {
+  required_plugins {
+    amazon = {
+      version = ">= 1.2.5"
+      source  = "github.com/hashicorp/amazon"
+    }
+  }
+}
+
 locals { 
   timestamp = regex_replace(timestamp(), "[- TZ:]", "")
 }
