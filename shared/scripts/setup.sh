@@ -117,8 +117,7 @@ sudo mkdir -p $CONSULTEMPLATEDIR
 sudo chmod 755 $CONSULTEMPLATEDIR
 
 
-# Docker
-## Some of the following Docker-related install steps are from https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository
+# Docker (taken from: https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository)
 # Remove old versions of Docker (if any) and redirect STDERR to /dev/null to avoid error messages if no old versions exist
 sudo apt-get remove docker docker-engine docker.io containerd runc 2> /dev/null || echo "No old versions of Docker to remove"
 
@@ -139,7 +138,6 @@ sudo apt-get update
 sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 
 # Java
-## TODO: Probably need to evaluate this block and make sure it's the right version/is still needed
 sudo add-apt-repository -y ppa:openjdk-r/ppa
 sudo apt-get update 
 sudo apt-get install -y openjdk-8-jdk
