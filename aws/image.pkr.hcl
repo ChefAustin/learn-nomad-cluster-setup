@@ -19,7 +19,7 @@ data "amazon-ami" "hashistack" {
   filters = {
     architecture                       = "x86_64"
     "block-device-mapping.volume-type" = "gp2"
-    name                               = "ubuntu/images/hvm-ssd/ubuntu-xenial-16.04-amd64-server-*"
+    name                               = "ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"
     root-device-type                   = "ebs"
     virtualization-type                = "hvm"
   }
@@ -31,7 +31,7 @@ data "amazon-ami" "hashistack" {
 
 source "amazon-ebs" "hashistack" {
   ami_name      = "hashistack-${local.timestamp}"
-  instance_type = "t2.medium"
+  instance_type = "t3.medium"
   region        = var.region
   source_ami    = "${data.amazon-ami.hashistack.id}"
   ssh_username  = "ubuntu"
